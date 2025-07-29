@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Akıllı Bilgi Toplama Botu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0077b5 0%, #004471 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .search-panel {
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
+        }
+
+        .results-panel {
+            padding: 40px;
+            background: #f8f9fa;
+            border-left: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0077b5;
+            box-shadow: 0 0 0 3px rgba(0, 119, 181, 0.1);
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #0077b5 0%, #004471 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 119, 181, 0.3);
+        }
+
+        .search-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cancel-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .cancel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: linear-gradient(135deg, #0077b5 0%, #004471 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            margin-top: 10px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0077b5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .profile-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #0077b5;
+            transition: all 0.3s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .profile-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .profile-score {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .profile-url {
+            color: #0077b5;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            display: block;
+            word-break: break-all;
+        }
+
+        .profile-url:hover {
+            text-decoration: underline;
+        }
+
+        .profile-summary {
+            color: #666;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-results h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0077b5;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .search-panel,
+            .results-panel {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .category-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-right: 10px;
+        }
+
+        .api-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .api-status.online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .api-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="api-status" id="api-status">API Durumu Kontrol Ediliyor...</div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔍 LinkedIn Profil Analiz Sistemi</h1>
+            <p>Gelişmiş Arama ve AI Destekli Profil Analizi</p>
+        </div>
+
+        <div class="main-content">
+            <div class="search-panel">
+                <form id="search-form">
+                    <div class="form-group">
+                        <label for="name">👤 Aranacak Kişi *</label>
+                        <input type="text" id="name" name="name" required placeholder="Örn: Ahmet Yılmaz">
+                        <div class="form-hint">Tam ad yazınız</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">🎯 Hedef Kategori *</label>
+                        <select id="category" name="category" required>
+                            <option value="">Kategori seçin</option>
+                            <option value="teknoloji">💻 Teknoloji</option>
+                            <option value="mühendislik">⚙️ Mühendislik</option>
+                            <option value="sağlık">🏥 Sağlık</option>
+                            <option value="hukuk">⚖️ Hukuk</option>
+                            <option value="iş dünyası">💼 İş Dünyası</option>
+                            <option value="tasarım">🎨 Tasarım</option>
+                            <option value="danışmanlık">🤝 Danışmanlık</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city">🏙️ Şehir</label>
+                        <input type="text" id="city" name="city" placeholder="Örn: İstanbul">
+                        <div class="form-hint">Opsiyonel - Arama sonuçlarını daraltır</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="job">💼 Meslek</label>
+                        <input type="text" id="job" name="job" placeholder="Örn: Yazılım Geliştirici">
+                        <div class="form-hint">Opsiyonel - Daha kesin sonuçlar için</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="university">🎓 Üniversite</label>
+                        <input type="text" id="university" name="university" placeholder="Örn: Boğaziçi Üniversitesi">
+                        <div class="form-hint">Opsiyonel - Eğitim filtrelemesi</div>
+                    </div>
+
+                    <button type="submit" class="search-btn" id="search-btn">
+                        🔍 Profilleri Ara ve Analiz Et
+                    </button>
+
+                    <button type="button" class="cancel-btn" id="cancel-btn">
+                        ❌ Aramayı İptal Et
+                    </button>
+                </form>
+            </div>
+
+            <div class="results-panel">
+                <div id="initial-message" class="no-results">
+                    <h3>🚀 Hazır!</h3>
+                    <p>Sol panelden arama kriterlerinizi girin ve profil analizine başlayın.</p>
+                    <div class="stats-grid" style="margin-top: 30px;">
+                        <div class="stat-card">
+                            <div class="stat-number">AI</div>
+                            <div class="stat-label">Destekli Analiz</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">20+</div>
+                            <div class="stat-label">Profil Tarama</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">7</div>
+                            <div class="stat-label">Kategori</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <h3 id="loading-title">🔍 Profiller Aranıyor...</h3>
+                    <p id="loading-description">Bu işlem birkaç dakika sürebilir</p>
+
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">Başlatılıyor...</div>
+                </div>
+
+                <div id="results-container" class="results-container" style="display: none;">
+                    <div id="status-message"></div>
+                    <div id="results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+        let currentSearchId = null;
+        let statusCheckInterval = null;
+        let isSearching = false;
+
+        // API durumu kontrolü
+        async function checkApiStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+
+                const statusElement = document.getElementById('api-status');
+                if (data.success) {
+                    statusElement.textContent = '🟢 API Çevrimiçi';
+                    statusElement.className = 'api-status online';
+                } else {
+                    throw new Error('API yanıt vermiyor');
+                }
+            } catch (error) {
+                const statusElement = document.getElementById('api-status');
+                statusElement.textContent = '🔴 API Çevrimdışı';
+                statusElement.className = 'api-status offline';
+            }
+        }
+
+        // Sayfa yüklendiğinde API durumunu kontrol et
+        checkApiStatus();
+        setInterval(checkApiStatus, 30000); // 30 saniyede bir kontrol et
+
+        document.getElementById('search-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (isSearching) return;
+
+            const formData = new FormData(this);
+            const searchData = {
+                name: formData.get('name'),
+                category: formData.get('category'),
+                city: formData.get('city') || null,
+                job: formData.get('job') || null,
+                university: formData.get('university') || null
+            };
+
+            await startSearch(searchData);
+        });
+
+        document.getElementById('cancel-btn').addEventListener('click', async function() {
+            if (currentSearchId) {
+                await cancelSearch(currentSearchId);
+            }
+        });
+
+        async function startSearch(data) {
+            try {
+                isSearching = true;
+
+                // UI güncellemeleri
+                document.getElementById('initial-message').style.display = 'none';
+                document.getElementById('results-container').style.display = 'none';
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('search-btn').style.display = 'none';
+                document.getElementById('cancel-btn').style.display = 'block';
+
+                // API'ye arama isteği gönder
+                const response = await fetch(`${API_BASE_URL}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+
+                currentSearchId = result.search_id;
+
+                // Durum kontrolünü başlat
+                statusCheckInterval = setInterval(() => {
+                    checkSearchStatus(currentSearchId);
+                }, 2000);
+
+            } catch (error) {
+                showError('Arama başlatılamadı: ' + error.message);
+                resetUI();
+            }
+        }
+
+        async function checkSearchStatus(searchId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/search/${searchId}/status`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+
+                // Progress güncellemesi
+                updateProgress(data.progress, data.status, data);
+
+                // Arama tamamlandıysa
+                if (data.status === 'completed') {
+                    clearInterval(statusCheckInterval);
+                    if (data.results && data.results.length > 0) {
+                        displayResults(data.results);
+                    } else {
+                        showError(data.error || 'Uygun profil bulunamadı');
+                    }
+                    resetUI();
+                } else if (data.status === 'error') {
+                    clearInterval(statusCheckInterval);
+                    showError(data.error || 'Bilinmeyen hata oluştu');
+                    resetUI();
+                }
+
+            } catch (error) {
+                clearInterval(statusCheckInterval);
+                showError('Durum kontrolü hatası: ' + error.message);
+                resetUI();
+            }
+        }
+
+        function updateProgress(progress, status, data) {
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const loadingTitle = document.getElementById('loading-title');
+            const loadingDescription = document.getElementById('loading-description');
+
+            progressBar.style.width = progress + '%';
+
+            switch (status) {
+                case 'starting':
+                    loadingTitle.textContent = '🚀 Başlatılıyor...';
+                    progressText.textContent = 'Arama parametreleri hazırlanıyor';
+                    break;
+                case 'searching':
+                    loadingTitle.textContent = '🔍 Google\'da Aranıyor...';
+                    progressText.textContent = 'LinkedIn profilleri bulunuyor';
+                    break;
+                case 'analyzing':
+                    loadingTitle.textContent = '🧠 Profiller Analiz Ediliyor...';
+                    progressText.textContent = `${data.processed_profiles}/${data.total_profiles} profil analiz edildi`;
+                    loadingDescription.textContent = 'AI ile profil içerikleri inceleniyor ve özetleniyor';
+                    break;
+                default:
+                    progressText.textContent = `İlerleme: ${progress}%`;
+            }
+        }
+
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('results-container');
+            const resultsDiv = document.getElementById('results');
+            const statusMessage = document.getElementById('status-message');
+
+            resultsContainer.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+
+            // Başarı mesajı
+            statusMessage.innerHTML = `
+                <div class="status-success">
+                    ✅ ${results.length} profil başarıyla analiz edildi ve skorlandı
+                </div>
+            `;
+
+            // Sonuçları görüntüle
+            resultsDiv.innerHTML = results.map((profile, index) => `
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div>
+                            <div class="profile-title">${profile.title}</div>
+                        </div>
+                        <div class="profile-score">Skor: ${profile.score.toFixed(3)}</div>
+                    </div>
+                    <a href="${profile.url}" target="_blank" class="profile-url">
+                        🔗 LinkedIn Profilini Görüntüle
+                    </a>
+                    <div class="profile-summary">
+                        ${profile.summary}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showError(message) {
+            const resultsContainer = document.getElementById('results-container');
+            const statusMessage = document.getElementById('status-message');
+            const resultsDiv = document.getElementById('results');
+
+            resultsContainer.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+
+            statusMessage.innerHTML = `
+                <div class="status-error">
+                    ❌ ${message}
+                </div>
+            `;
+
+            resultsDiv.innerHTML = `
+                <div class="no-results">
+                    <h3>😔 Sonuç Bulunamadı</h3>
+                    <p>Arama kriterlerinizi değiştirerek tekrar deneyin.</p>
+                </div>
+            `;
+        }
+
+        async function cancelSearch(searchId) {
+            try {
+                await fetch(`${API_BASE_URL}/search/${searchId}`, {
+                    method: 'DELETE'
+                });
+
+                if (statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                }
+
+                showError('Arama iptal edildi');
+                resetUI();
+            } catch (error) {
+                console.error('İptal hatası:', error);
+                resetUI();
+            }
+        }
+
+        function resetUI() {
+            isSearching = false;
+            currentSearchId = null;
+
+            document.getElementById('search-btn').style.display = 'block';
+            document.getElementById('cancel-btn').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+
+            // Progress sıfırla
+            document.getElementById('progress-bar').style.width = '0%';
+        }
+
+        // Sayfa kapanırken arama işlemini iptal et
+        window.addEventListener('beforeunload', function() {
+            if (currentSearchId) {
+                navigator.sendBeacon(`${API_BASE_URL}/search/${currentSearchId}`,
+                    JSON.stringify({ method: 'DELETE' }));
+            }
+        });
+    </script>
+</body>
+</html>
