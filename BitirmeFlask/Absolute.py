@@ -25,7 +25,7 @@ genai.configure(api_key="YOUR API KEY")
 model = genai.GenerativeModel(model_name="models/gemini-1.5-flash-latest")
 
 BASE_DIR = os.path.join(os.path.expanduser("~"), "Desktop", "linkedin_kisiler")
-API_KEY = "YOUR_API_KEY"
+API_KEY = "YOUR API KEY"
 CSE_ID = "YOUR_CSE_ID"
 LINKEDIN_EMAIL = "YOUR_EMAIL"
 LINKEDIN_PASSWORD = "YOUR_PASSWORD"
