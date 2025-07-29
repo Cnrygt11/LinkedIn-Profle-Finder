@@ -21,7 +21,7 @@ def embed_text(text):
     return embed_model.encode(text)
 
 # Gemini API'yi yapılandır
-genai.configure(api_key="YOUR_API_KEY")
+genai.configure(api_key="YOUR API KEY")
 model = genai.GenerativeModel(model_name="models/gemini-1.5-flash-latest")
 
 BASE_DIR = os.path.join(os.path.expanduser("~"), "Desktop", "linkedin_kisiler")
